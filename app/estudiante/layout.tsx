@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getRol, getEstudiante, logout } from "@/lib/auth";
 import { EstudianteAuth } from "@/lib/auth";
 import { LogOut, Activity } from "lucide-react";
+import Link from "next/link";
 
 export default function EstudianteLayout({
   children,
@@ -26,7 +27,6 @@ export default function EstudianteLayout({
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Top nav simple */}
       <header className="bg-white border-b border-slate-100 sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -64,9 +64,8 @@ export default function EstudianteLayout({
           </div>
         </div>
 
-        {/* Nav simple */}
         <div className="max-w-3xl mx-auto px-4 flex gap-1 pb-0">
-          
+          <Link
             href="/estudiante"
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium
               text-slate-600 hover:text-slate-800 border-b-2 border-transparent
@@ -74,7 +73,7 @@ export default function EstudianteLayout({
           >
             <Activity size={13} />
             Mis prácticas
-          </a>
+          </Link>
         </div>
       </header>
 

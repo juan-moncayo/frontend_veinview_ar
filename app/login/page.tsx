@@ -2,9 +2,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
+import axios from "axios";
 import api from "@/lib/api";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://backendveinviewar-production.up.railway.app";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,12 +22,16 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    // Intentar login como profesor primero
+    const username = form.username.trim();
+    const password = form.password;
+
+    // Intentar login como profesor — axios directo, sin interceptor
     try {
-      const { data } = await api.post("/api/profesor/login/", {
-        username: form.username.trim(),
-        password: form.password,
-      });
+      const { data } = await axios.post(
+        `${BASE_URL}/api/profesor/login/`,
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
       localStorage.setItem("profesor", JSON.stringify(data.profesor));
@@ -30,24 +39,31 @@ export default function LoginPage() {
       router.push("/dashboard");
       return;
     } catch {
-      // No es profesor, intentar como estudiante
+      // No es profesor, continuar con estudiante
     }
 
-    // Intentar login como estudiante (username = correo, password = codigo)
+    // Intentar login como estudiante — axios directo, sin interceptor
     try {
-      const { data } = await api.post("/api/token/", {
-        username: form.username.trim(),
-        password: form.password,
-      });
+      const { data } = await axios.post(
+        `${BASE_URL}/api/token/`,
+        { username, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
       localStorage.setItem("rol", "estudiante");
 
-      // Obtener perfil del estudiante
-      const perfilRes = await api.get("/api/estudiantes/mi_perfil/", {
-        headers: { Authorization: `Bearer ${data.access}` },
-      });
+      // Obtener perfil con el token recién obtenido
+      const perfilRes = await axios.get(
+        `${BASE_URL}/api/estudiantes/mi_perfil/`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${data.access}`,
+          },
+        }
+      );
       localStorage.setItem("estudiante", JSON.stringify(perfilRes.data));
       router.push("/estudiante");
       return;
