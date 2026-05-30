@@ -25,7 +25,6 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     const username = form.username.trim();
     const password = form.password;
 
@@ -41,9 +40,7 @@ export default function LoginPage() {
       localStorage.setItem("rol", "profesor");
       router.push("/dashboard");
       return;
-    } catch {
-      // no es profesor
-    }
+    } catch { /* no es profesor */ }
 
     try {
       const { data } = await axios.post(
@@ -54,7 +51,6 @@ export default function LoginPage() {
       localStorage.setItem("access_token", data.access);
       localStorage.setItem("refresh_token", data.refresh);
       localStorage.setItem("rol", "estudiante");
-
       const perfilRes = await axios.get(
         `${BASE_URL}/api/estudiantes/mi_perfil/`,
         { headers: { Authorization: `Bearer ${data.access}` } }
@@ -105,6 +101,10 @@ export default function LoginPage() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        @keyframes scanline {
+          0%   { transform: translateY(-100%); }
+          100% { transform: translateY(600px); }
+        }
 
         .vv-orb1 { animation: floatOrb1 9s ease-in-out infinite; }
         .vv-orb2 { animation: floatOrb2 11s ease-in-out infinite; }
@@ -127,7 +127,7 @@ export default function LoginPage() {
           background: rgba(255,255,255,.06);
           border: 1px solid rgba(255,255,255,.1);
           border-radius: 12px;
-          padding: 13px 14px 13px 42px;
+          padding: 13px 14px 13px 44px;
           color: white;
           font-size: 15px;
           outline: none;
@@ -135,13 +135,23 @@ export default function LoginPage() {
           box-sizing: border-box;
           -webkit-appearance: none;
         }
-        .vv-input::placeholder { color: rgba(148,163,184,.4); }
+        .vv-input::placeholder { color: rgba(180,200,255,.3); }
         .vv-input:focus {
-          border-color: rgba(96,165,250,.55);
+          border-color: rgba(59,130,246,.55);
           background: rgba(255,255,255,.09);
         }
 
-        .vv-btn {
+        .vv-label {
+          display: block;
+          color: rgba(180,200,255,.65);
+          font-size: 11px;
+          letter-spacing: .09em;
+          text-transform: uppercase;
+          margin-bottom: 8px;
+          font-weight: 500;
+        }
+
+        .vv-btn-login {
           width: 100%;
           padding: 14px;
           border-radius: 12px;
@@ -162,18 +172,9 @@ export default function LoginPage() {
           transition: opacity .2s, transform .15s;
           -webkit-appearance: none;
         }
-        .vv-btn:hover  { opacity: .92; }
-        .vv-btn:active { transform: scale(.98); }
-        .vv-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-        .vv-label {
-          display: block;
-          color: rgba(148,163,184,.65);
-          font-size: 11px;
-          letter-spacing: .09em;
-          text-transform: uppercase;
-          margin-bottom: 8px;
-        }
+        .vv-btn-login:hover  { opacity: .92; }
+        .vv-btn-login:active { transform: scale(.98); }
+        .vv-btn-login:disabled { opacity: .45; cursor: not-allowed; }
 
         .vv-eye {
           position: absolute;
@@ -184,28 +185,26 @@ export default function LoginPage() {
           border: none;
           cursor: pointer;
           padding: 4px;
-          color: rgba(148,163,184,.45);
+          color: rgba(180,200,255,.4);
           display: flex;
           align-items: center;
           -webkit-appearance: none;
+          transition: color .15s;
         }
-        .vv-eye:hover { color: rgba(148,163,184,.8); }
+        .vv-eye:hover { color: rgba(180,200,255,.8); }
 
         @media (max-width: 480px) {
           .vv-page { padding: 20px 16px !important; }
           .vv-logo-wrap { width: 100px !important; height: 100px !important; border-radius: 28px !important; }
-          .vv-logo-wrap img { width: 72px !important; height: 72px !important; }
           .vv-title { font-size: 24px !important; }
           .vv-card { padding: 22px 18px !important; border-radius: 20px !important; }
         }
       `}</style>
 
-      {/* Fondo */}
       <div
         className="vv-page"
         style={{
           minHeight: "100vh",
-          minHeight: "100dvh",
           background:
             "linear-gradient(135deg,#060c1a 0%,#0d1b3e 45%,#0a1628 75%,#040810 100%)",
           display: "flex",
@@ -251,27 +250,34 @@ export default function LoginPage() {
               alignItems: "center",
               marginBottom: "36px",
             }}>
-              {/* Contenedor logo grande */}
               <div
                 className="vv-logo-wrap"
                 style={{
                   width: "120px",
                   height: "120px",
                   borderRadius: "32px",
-                  background: "rgba(255,255,255,.08)",
+                  background: "rgba(255,255,255,.07)",
                   backdropFilter: "blur(20px)",
                   WebkitBackdropFilter: "blur(20px)",
-                  border: "1px solid rgba(255,255,255,.15)",
+                  border: "1px solid rgba(255,255,255,.12)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   marginBottom: "20px",
                   position: "relative",
                   boxShadow:
-                    "0 12px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.15)",
+                    "0 12px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12)",
                   overflow: "hidden",
                 }}
               >
+                {/* Scanline decorativo */}
+                <div style={{
+                  position: "absolute", top: 0, left: 0, right: 0,
+                  height: "30px",
+                  background: "linear-gradient(transparent,rgba(59,130,246,.08),transparent)",
+                  animation: "scanline 4s linear infinite",
+                  pointerEvents: "none",
+                }}/>
                 <Image
                   src="/logo.png"
                   alt="VeinView AR"
@@ -280,7 +286,7 @@ export default function LoginPage() {
                   style={{ objectFit: "contain" }}
                   priority
                 />
-                {/* Dot estado */}
+                {/* Indicador activo */}
                 <div
                   className="vv-dot"
                   style={{
@@ -309,7 +315,7 @@ export default function LoginPage() {
                 VeinView AR
               </h1>
               <p style={{
-                color: "rgba(148,163,184,.55)",
+                color: "rgba(180,200,255,.45)",
                 fontSize: "12px",
                 letterSpacing: ".18em",
                 textTransform: "uppercase",
@@ -320,32 +326,32 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Card */}
+          {/* Card login */}
           {show && (
             <div
               className="vv-card vv-card-in"
               style={{
-                background: "rgba(255,255,255,.07)",
+                background: "rgba(255,255,255,.06)",
                 backdropFilter: "blur(40px)",
                 WebkitBackdropFilter: "blur(40px)",
-                border: "1px solid rgba(255,255,255,.11)",
+                border: "1px solid rgba(255,255,255,.1)",
                 borderRadius: "24px",
                 padding: "28px 26px",
                 boxShadow:
-                  "0 25px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1)",
+                  "0 25px 60px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08)",
               }}
             >
-              {/* Línea gradiente top */}
+              {/* Línea gradiente superior */}
               <div style={{
                 height: "1px",
                 background:
-                  "linear-gradient(90deg,transparent,rgba(96,165,250,.7),rgba(99,102,241,.7),transparent)",
+                  "linear-gradient(90deg,transparent,rgba(59,130,246,.7),rgba(99,102,241,.7),transparent)",
                 marginBottom: "24px",
                 borderRadius: "1px",
               }}/>
 
               <p style={{
-                color: "rgba(148,163,184,.7)",
+                color: "rgba(180,200,255,.6)",
                 fontSize: "13px",
                 margin: "0 0 22px",
               }}>
@@ -354,17 +360,18 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit}>
 
-                {/* Usuario */}
+                {/* Campo usuario */}
                 <div className="vv-f1" style={{ marginBottom: "14px" }}>
                   <label className="vv-label">Usuario</label>
                   <div style={{ position: "relative" }}>
+                    {/* Icono usuario */}
                     <svg
                       style={{
-                        position: "absolute", left: "13px", top: "50%",
+                        position: "absolute", left: "14px", top: "50%",
                         transform: "translateY(-50%)", pointerEvents: "none",
                       }}
                       width="17" height="17" viewBox="0 0 24 24" fill="none"
-                      stroke="rgba(148,163,184,.5)" strokeWidth="1.5" strokeLinecap="round"
+                      stroke="rgba(180,200,255,.45)" strokeWidth="1.5" strokeLinecap="round"
                     >
                       <circle cx="12" cy="8" r="4"/>
                       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
@@ -374,9 +381,7 @@ export default function LoginPage() {
                       type="text"
                       placeholder="usuario o correo"
                       value={form.username}
-                      onChange={(e) =>
-                        setForm({ ...form, username: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, username: e.target.value })}
                       autoComplete="username"
                       autoCapitalize="none"
                       required
@@ -384,17 +389,18 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                {/* Contraseña */}
+                {/* Campo contraseña */}
                 <div className="vv-f2" style={{ marginBottom: "22px" }}>
                   <label className="vv-label">Contraseña</label>
                   <div style={{ position: "relative" }}>
+                    {/* Icono candado */}
                     <svg
                       style={{
-                        position: "absolute", left: "13px", top: "50%",
+                        position: "absolute", left: "14px", top: "50%",
                         transform: "translateY(-50%)", pointerEvents: "none",
                       }}
                       width="17" height="17" viewBox="0 0 24 24" fill="none"
-                      stroke="rgba(148,163,184,.5)" strokeWidth="1.5" strokeLinecap="round"
+                      stroke="rgba(180,200,255,.45)" strokeWidth="1.5" strokeLinecap="round"
                     >
                       <rect x="3" y="11" width="18" height="11" rx="2"/>
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -404,9 +410,7 @@ export default function LoginPage() {
                       type={showPass ? "text" : "password"}
                       placeholder="••••••••"
                       value={form.password}
-                      onChange={(e) =>
-                        setForm({ ...form, password: e.target.value })
-                      }
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
                       autoComplete="current-password"
                       required
                       style={{ paddingRight: "44px" }}
@@ -462,7 +466,7 @@ export default function LoginPage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="vv-btn"
+                    className="vv-btn-login"
                   >
                     <div className="vv-shimmer" style={{
                       position: "absolute", inset: 0,
@@ -470,7 +474,7 @@ export default function LoginPage() {
                     {loading ? (
                       <>
                         <svg
-                          style={{ animation: "spin .8s linear infinite" }}
+                          style={{ animation: "spin .8s linear infinite", flexShrink: 0 }}
                           width="16" height="16" viewBox="0 0 24 24" fill="none"
                           stroke="white" strokeWidth="2" strokeLinecap="round"
                         >
@@ -491,7 +495,7 @@ export default function LoginPage() {
                 </div>
               </form>
 
-              {/* Línea bottom */}
+              {/* Separador inferior */}
               <div style={{
                 height: "1px",
                 background:
@@ -521,7 +525,7 @@ export default function LoginPage() {
                 }}
               />
               <span style={{
-                color: "rgba(100,116,139,.45)",
+                color: "rgba(180,200,255,.4)",
                 fontSize: "11px",
                 letterSpacing: ".05em",
               }}>
