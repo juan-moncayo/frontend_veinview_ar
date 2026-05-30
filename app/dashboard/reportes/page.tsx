@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, Filter } from "lucide-react";
+import { RefreshCw, Filter, Trophy, Calendar, BarChart2 } from "lucide-react";
 import api from "@/lib/api";
-import TopBar from "@/components/layout/TopBar";
 import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
 
 interface ReporteGuardado {
   id: number;
@@ -56,23 +54,25 @@ interface PracticaRaw {
   estado: string;
 }
 
-function MetricaBox({
-  label,
-  value,
-  sub,
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-}) {
-  return (
-    <div className="bg-slate-50 rounded-xl px-4 py-3">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="text-2xl font-semibold text-slate-800 mt-0.5">{value}</p>
-      {sub && <p className="text-xs text-slate-400 mt-0.5">{sub}</p>}
-    </div>
-  );
-}
+const inputDateStyle: React.CSSProperties = {
+  background: "rgba(255,255,255,.07)",
+  border: "1px solid rgba(255,255,255,.12)",
+  borderRadius: "10px",
+  padding: "9px 12px",
+  color: "white",
+  fontSize: "13px",
+  outline: "none",
+  colorScheme: "dark",
+};
+
+const labelStyle: React.CSSProperties = {
+  color: "rgba(200,215,255,.7)",
+  fontSize: "11px",
+  textTransform: "uppercase",
+  letterSpacing: ".07em",
+  display: "block",
+  marginBottom: "5px",
+};
 
 export default function ReportesPage() {
   const [reporte, setReporte] = useState<ReporteGeneral | null>(null);
@@ -94,7 +94,6 @@ export default function ReportesPage() {
 
       const todasPracticas: PracticaRaw[] = practicasRes.data.results ?? [];
       const todosResumenes: ResumenRaw[] = resumenesRes.data.results ?? [];
-
       const finalizadas = todasPracticas.filter((p) => p.estado === "finalizada");
 
       const precisionTotal =
@@ -110,23 +109,17 @@ export default function ReportesPage() {
             resumenesConCal.length
           : 0;
 
-      // Agrupar por estudiante
       type EstudianteAcum = {
-        nombre: string;
-        codigo: string;
-        precisiones: number[];
-        total: number;
+        nombre: string; codigo: string;
+        precisiones: number[]; total: number;
       };
-
       const porEstudiante: Record<string, EstudianteAcum> = {};
       todosResumenes.forEach((r) => {
         const key = r.estudiante_codigo;
         if (!porEstudiante[key]) {
           porEstudiante[key] = {
-            nombre: r.estudiante_nombre,
-            codigo: r.estudiante_codigo,
-            precisiones: [],
-            total: 0,
+            nombre: r.estudiante_nombre, codigo: r.estudiante_codigo,
+            precisiones: [], total: 0,
           };
         }
         porEstudiante[key].precisiones.push(r.precision_porcentaje ?? 0);
@@ -135,15 +128,13 @@ export default function ReportesPage() {
 
       const mejores: MejorEstudiante[] = Object.values(porEstudiante)
         .map((e) => ({
-          nombre: e.nombre,
-          codigo: e.codigo,
+          nombre: e.nombre, codigo: e.codigo,
           precision: e.precisiones.reduce((a, b) => a + b, 0) / e.precisiones.length,
           total_practicas: e.total,
         }))
         .sort((a, b) => b.precision - a.precision)
         .slice(0, 5);
 
-      // Agrupar por mes
       type MesAcum = { total: number; precisiones: number[] };
       const porMes: Record<string, MesAcum> = {};
       todosResumenes.forEach((r) => {
@@ -157,8 +148,7 @@ export default function ReportesPage() {
       const practicasPorMes: PracticaPorMes[] = Object.entries(porMes)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([mes, datos]) => ({
-          mes,
-          total: datos.total,
+          mes, total: datos.total,
           precision_promedio:
             datos.precisiones.reduce((a, b) => a + b, 0) / datos.precisiones.length,
         }));
@@ -183,9 +173,7 @@ export default function ReportesPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchReporteGeneral();
-  }, [fetchReporteGeneral]);
+  useEffect(() => { fetchReporteGeneral(); }, [fetchReporteGeneral]);
 
   async function generarReportePeriodo() {
     if (!filtro.desde || !filtro.hasta) return;
@@ -206,64 +194,138 @@ export default function ReportesPage() {
 
   if (loading)
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-6 h-6 border-2 border-slate-300
-          border-t-slate-700 rounded-full" />
+      <div style={{
+        display: "flex", alignItems: "center",
+        justifyContent: "center", height: "60vh",
+      }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{
+          width: "26px", height: "26px",
+          border: "2px solid rgba(255,255,255,.1)",
+          borderTopColor: "#3b82f6", borderRadius: "50%",
+          animation: "spin .8s linear infinite",
+        }}/>
       </div>
     );
 
   return (
     <>
-      <TopBar
-        title="Reportes"
-        subtitle="Estadísticas generales de todas las prácticas"
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              icon={<RefreshCw size={14} />}
-              onClick={fetchReporteGeneral}
-            >
-              Actualizar
-            </Button>
-            <Button
-              variant="secondary"
-              icon={<Filter size={14} />}
-              onClick={() => setMostrarFiltro((v) => !v)}
-            >
-              Filtrar período
-            </Button>
-          </div>
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateY(14px); }
+          to   { opacity:1; transform:translateY(0); }
         }
-      />
+        .vv-s1 { animation: fadeUp .4s ease both; }
+        .vv-s2 { animation: fadeUp .4s .08s ease both; }
+        .vv-s3 { animation: fadeUp .4s .16s ease both; }
+        .vv-s4 { animation: fadeUp .4s .24s ease both; }
+        .vv-s5 { animation: fadeUp .4s .32s ease both; }
+        .vv-s6 { animation: fadeUp .4s .40s ease both; }
+
+        .vv-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4,1fr);
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+        .vv-cards-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          margin-bottom: 16px;
+        }
+        .vv-estado-grid {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+          .vv-stats-grid  { grid-template-columns: repeat(2,1fr); gap:10px; }
+          .vv-cards-grid  { grid-template-columns: 1fr; }
+          .vv-estado-grid { grid-template-columns: repeat(3,1fr); gap:8px; }
+          .vv-header-actions { flex-wrap: wrap; }
+          .vv-filtro-row { flex-direction: column; align-items: flex-start !important; }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="vv-s1" style={{
+        display: "flex", alignItems: "flex-start",
+        justifyContent: "space-between",
+        marginBottom: "24px", gap: "12px", flexWrap: "wrap",
+      }}>
+        <div>
+          <p style={{
+            color: "rgba(180,200,255,.65)",
+            fontSize: "11px", margin: "0 0 2px",
+            letterSpacing: ".05em", textTransform: "uppercase",
+          }}>
+            Análisis
+          </p>
+          <h1 style={{
+            color: "white", fontSize: "20px",
+            fontWeight: 700, margin: 0, letterSpacing: "-.4px",
+          }}>
+            Reportes
+          </h1>
+          <p style={{
+            color: "rgba(180,200,255,.6)",
+            fontSize: "12px", margin: "3px 0 0",
+          }}>
+            Estadísticas generales de todas las prácticas
+          </p>
+        </div>
+        <div className="vv-header-actions" style={{ display: "flex", gap: "8px" }}>
+          <Button variant="secondary" icon={<RefreshCw size={13}/>}
+            onClick={fetchReporteGeneral}>
+            Actualizar
+          </Button>
+          <Button variant="secondary" icon={<Filter size={13}/>}
+            onClick={() => setMostrarFiltro((v) => !v)}>
+            Período
+          </Button>
+        </div>
+      </div>
 
       {/* Filtro colapsable */}
       {mostrarFiltro && (
-        <Card className="mb-5">
-          <p className="text-sm font-medium text-slate-700 mb-3">
-            Guardar reporte por período específico
+        <div className="vv-s1" style={{
+          background: "rgba(255,255,255,.06)",
+          border: "1px solid rgba(255,255,255,.1)",
+          borderRadius: "16px",
+          padding: "18px",
+          marginBottom: "16px",
+        }}>
+          <p style={{
+            color: "white",
+            fontSize: "13px", fontWeight: 500, margin: "0 0 14px",
+          }}>
+            Guardar reporte por período
           </p>
-          <div className="flex items-end gap-3 flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-slate-500">Desde</label>
+          <div
+            className="vv-filtro-row"
+            style={{
+              display: "flex", alignItems: "flex-end",
+              gap: "12px", flexWrap: "wrap",
+            }}
+          >
+            <div>
+              <label style={labelStyle}>Desde</label>
               <input
                 type="date"
                 value={filtro.desde}
                 onChange={(e) => setFiltro({ ...filtro, desde: e.target.value })}
-                className="rounded-lg border border-slate-200 bg-white text-sm
-                  text-slate-900 px-3 py-2 focus:outline-none focus:ring-2
-                  focus:ring-slate-300"
+                style={inputDateStyle}
               />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-slate-500">Hasta</label>
+            <div>
+              <label style={labelStyle}>Hasta</label>
               <input
                 type="date"
                 value={filtro.hasta}
                 onChange={(e) => setFiltro({ ...filtro, hasta: e.target.value })}
-                className="rounded-lg border border-slate-200 bg-white text-sm
-                  text-slate-900 px-3 py-2 focus:outline-none focus:ring-2
-                  focus:ring-slate-300"
+                style={inputDateStyle}
               />
             </div>
             <Button
@@ -274,124 +336,237 @@ export default function ReportesPage() {
               Guardar reporte
             </Button>
           </div>
-        </Card>
+        </div>
       )}
 
       {reporte && (
         <>
-          {/* Métricas generales */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <MetricaBox label="Prácticas finalizadas" value={reporte.total_practicas} />
-            <MetricaBox label="Estudiantes activos" value={reporte.total_estudiantes} />
-            <MetricaBox
-              label="Precisión promedio"
-              value={`${reporte.promedio_precision.toFixed(1)}%`}
-              sub="de todas las prácticas"
-            />
-            <MetricaBox
-              label="Calificación promedio"
-              value={
-                reporte.promedio_calificacion > 0
-                  ? `${reporte.promedio_calificacion.toFixed(2)} / 5`
-                  : "—"
-              }
-              sub="escala 0 – 5"
-            />
+          {/* Stats */}
+          <div className="vv-stats-grid vv-s2">
+            {[
+              {
+                label: "Prácticas finalizadas",
+                value: reporte.total_practicas,
+                accent: "rgba(52,211,153,.15)",
+                border: "rgba(52,211,153,.3)",
+              },
+              {
+                label: "Estudiantes activos",
+                value: reporte.total_estudiantes,
+                accent: "rgba(59,130,246,.15)",
+                border: "rgba(59,130,246,.3)",
+              },
+              {
+                label: "Precisión promedio",
+                value: `${reporte.promedio_precision.toFixed(1)}%`,
+                accent: "rgba(139,92,246,.12)",
+                border: "rgba(139,92,246,.28)",
+              },
+              {
+                label: "Calificación prom.",
+                value: reporte.promedio_calificacion > 0
+                  ? `${reporte.promedio_calificacion.toFixed(2)} / 5` : "—",
+                accent: "rgba(251,191,36,.12)",
+                border: "rgba(251,191,36,.28)",
+              },
+            ].map(({ label, value, accent, border }) => (
+              <div key={label} style={{
+                background: accent,
+                border: `1px solid ${border}`,
+                borderRadius: "14px", padding: "16px",
+              }}>
+                <p style={{
+                  color: "rgba(200,215,255,.7)",
+                  fontSize: "10px", margin: "0 0 10px",
+                  textTransform: "uppercase", letterSpacing: ".06em",
+                }}>
+                  {label}
+                </p>
+                <p style={{
+                  color: "white", fontSize: "24px",
+                  fontWeight: 700, margin: 0, letterSpacing: "-.5px",
+                }}>
+                  {value}
+                </p>
+              </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+          {/* Cards grid */}
+          <div className="vv-cards-grid">
+
             {/* Mejores estudiantes */}
-            <Card>
-              <h3 className="text-sm font-semibold text-slate-700 mb-4">
-                Estudiantes con mejor desempeño
-              </h3>
+            <div className="vv-s3" style={{
+              background: "rgba(255,255,255,.06)",
+              border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: "16px", padding: "18px",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center",
+                gap: "8px", marginBottom: "16px",
+              }}>
+                <Trophy size={14} color="#fcd34d"/>
+                <h3 style={{
+                  color: "white",
+                  fontSize: "13px", fontWeight: 500, margin: 0,
+                }}>
+                  Mejor desempeño
+                </h3>
+              </div>
+
               {reporte.mejores_estudiantes.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-4">Sin datos aún</p>
+                <p style={{
+                  color: "rgba(180,200,255,.45)",
+                  fontSize: "13px", textAlign: "center",
+                  padding: "20px 0", margin: 0,
+                }}>
+                  Sin datos aún
+                </p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  {reporte.mejores_estudiantes.map((e, i) => (
-                    <div
-                      key={e.codigo}
-                      className="flex items-center justify-between py-2
-                        border-b border-slate-50 last:border-0"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`w-6 h-6 rounded-full flex items-center
-                            justify-center text-xs font-semibold shrink-0
-                            ${i === 0 ? "bg-amber-100 text-amber-700"
-                              : i === 1 ? "bg-slate-200 text-slate-600"
-                              : i === 2 ? "bg-orange-100 text-orange-700"
-                              : "bg-slate-100 text-slate-500"}`}
-                        >
-                          {i + 1}
-                        </span>
-                        <div>
-                          <p className="text-sm font-medium text-slate-800">{e.nombre}</p>
-                          <p className="text-xs text-slate-400">
-                            {e.codigo} · {e.total_practicas} práctica
-                            {e.total_practicas !== 1 ? "s" : ""}
-                          </p>
-                        </div>
+                reporte.mejores_estudiantes.map((e, i) => {
+                  const medalColor =
+                    i === 0
+                      ? { bg: "rgba(251,191,36,.18)", border: "rgba(251,191,36,.35)", text: "#fcd34d" }
+                      : i === 1
+                      ? { bg: "rgba(200,215,255,.1)", border: "rgba(200,215,255,.2)", text: "rgba(200,215,255,.85)" }
+                      : i === 2
+                      ? { bg: "rgba(251,146,60,.15)", border: "rgba(251,146,60,.28)", text: "#fdba74" }
+                      : { bg: "rgba(255,255,255,.06)", border: "rgba(255,255,255,.1)", text: "rgba(200,215,255,.6)" };
+
+                  const precColor =
+                    e.precision >= 80 ? "#6ee7b7"
+                    : e.precision >= 60 ? "#fcd34d"
+                    : "#fca5a5";
+
+                  return (
+                    <div key={e.codigo} style={{
+                      display: "flex", alignItems: "center",
+                      gap: "10px", padding: "9px 0",
+                      borderBottom: i < reporte.mejores_estudiantes.length - 1
+                        ? "1px solid rgba(255,255,255,.07)" : "none",
+                    }}>
+                      <div style={{
+                        width: "24px", height: "24px",
+                        borderRadius: "50%",
+                        background: medalColor.bg,
+                        border: `1px solid ${medalColor.border}`,
+                        display: "flex", alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "10px", fontWeight: 700,
+                        color: medalColor.text, flexShrink: 0,
+                      }}>
+                        {i + 1}
                       </div>
-                      <span
-                        className={`text-sm font-semibold ${
-                          e.precision >= 80 ? "text-green-600"
-                          : e.precision >= 60 ? "text-amber-600"
-                          : "text-red-500"
-                        }`}
-                      >
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          color: "white",
+                          fontSize: "13px", fontWeight: 500,
+                          margin: 0, whiteSpace: "nowrap",
+                          overflow: "hidden", textOverflow: "ellipsis",
+                        }}>
+                          {e.nombre}
+                        </p>
+                        <p style={{
+                          color: "rgba(180,200,255,.6)",
+                          fontSize: "10px", margin: "2px 0 0",
+                        }}>
+                          {e.codigo} · {e.total_practicas} práctica
+                          {e.total_practicas !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <span style={{
+                        color: precColor,
+                        fontSize: "13px", fontWeight: 700, flexShrink: 0,
+                      }}>
                         {e.precision.toFixed(1)}%
                       </span>
                     </div>
-                  ))}
-                </div>
+                  );
+                })
               )}
-            </Card>
+            </div>
 
             {/* Actividad por mes */}
-            <Card>
-              <h3 className="text-sm font-semibold text-slate-700 mb-4">
-                Actividad por mes
-              </h3>
+            <div className="vv-s4" style={{
+              background: "rgba(255,255,255,.06)",
+              border: "1px solid rgba(255,255,255,.1)",
+              borderRadius: "16px", padding: "18px",
+            }}>
+              <div style={{
+                display: "flex", alignItems: "center",
+                gap: "8px", marginBottom: "16px",
+              }}>
+                <Calendar size={14} color="#93c5fd"/>
+                <h3 style={{
+                  color: "white",
+                  fontSize: "13px", fontWeight: 500, margin: 0,
+                }}>
+                  Actividad por mes
+                </h3>
+              </div>
+
               {reporte.practicas_por_mes.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-4">Sin datos aún</p>
+                <p style={{
+                  color: "rgba(180,200,255,.45)",
+                  fontSize: "13px", textAlign: "center",
+                  padding: "20px 0", margin: 0,
+                }}>
+                  Sin datos aún
+                </p>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {reporte.practicas_por_mes.map((m) => {
                     const [anio, mes] = m.mes.split("-");
                     const nombreMes = new Date(
-                      parseInt(anio),
-                      parseInt(mes) - 1
+                      parseInt(anio), parseInt(mes) - 1
                     ).toLocaleDateString("es-CO", {
-                      month: "long",
-                      year: "numeric",
+                      month: "long", year: "numeric",
                     });
                     const maxTotal = Math.max(
                       ...reporte.practicas_por_mes.map((x) => x.total)
                     );
+                    const precColor =
+                      m.precision_promedio >= 80 ? "#6ee7b7"
+                      : m.precision_promedio >= 60 ? "#fcd34d"
+                      : "#fca5a5";
+
                     return (
-                      <div key={m.mes} className="flex items-center gap-3">
-                        <p className="text-xs text-slate-500 w-28 shrink-0 capitalize">
+                      <div key={m.mes} style={{
+                        display: "flex", alignItems: "center", gap: "10px",
+                      }}>
+                        <p style={{
+                          color: "rgba(180,200,255,.7)",
+                          fontSize: "11px", margin: 0,
+                          width: "90px", flexShrink: 0,
+                          textTransform: "capitalize",
+                          whiteSpace: "nowrap", overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}>
                           {nombreMes}
                         </p>
-                        <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-slate-700 rounded-full transition-all"
-                            style={{ width: `${(m.total / maxTotal) * 100}%` }}
-                          />
+                        <div style={{
+                          flex: 1, height: "4px",
+                          background: "rgba(255,255,255,.1)",
+                          borderRadius: "2px", overflow: "hidden",
+                        }}>
+                          <div style={{
+                            height: "100%", borderRadius: "2px",
+                            background: "rgba(59,130,246,.7)",
+                            width: `${(m.total / maxTotal) * 100}%`,
+                            transition: "width .5s ease",
+                          }}/>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs font-medium text-slate-700">
+                        <div style={{
+                          display: "flex", alignItems: "center",
+                          gap: "6px", flexShrink: 0,
+                        }}>
+                          <span style={{
+                            color: "white",
+                            fontSize: "12px", fontWeight: 600,
+                          }}>
                             {m.total}
                           </span>
-                          <span
-                            className={`text-xs ${
-                              m.precision_promedio >= 80 ? "text-green-600"
-                              : m.precision_promedio >= 60 ? "text-amber-600"
-                              : "text-red-500"
-                            }`}
-                          >
+                          <span style={{ color: precColor, fontSize: "11px", fontWeight: 500 }}>
                             {m.precision_promedio.toFixed(0)}%
                           </span>
                         </div>
@@ -400,71 +575,139 @@ export default function ReportesPage() {
                   })}
                 </div>
               )}
-            </Card>
+            </div>
           </div>
 
-          {/* Estado de prácticas */}
-          <Card className="mb-6">
-            <h3 className="text-sm font-semibold text-slate-700 mb-4">
-              Estado general de prácticas
-            </h3>
-            <div className="grid grid-cols-3 gap-4">
+          {/* Estado prácticas */}
+          <div className="vv-s5" style={{
+            background: "rgba(255,255,255,.06)",
+            border: "1px solid rgba(255,255,255,.1)",
+            borderRadius: "16px",
+            padding: "18px",
+            marginBottom: "16px",
+          }}>
+            <div style={{
+              display: "flex", alignItems: "center",
+              gap: "8px", marginBottom: "14px",
+            }}>
+              <BarChart2 size={14} color="rgba(180,200,255,.6)"/>
+              <h3 style={{
+                color: "white",
+                fontSize: "13px", fontWeight: 500, margin: 0,
+              }}>
+                Estado general de prácticas
+              </h3>
+            </div>
+            <div className="vv-estado-grid">
               {[
                 {
                   label: "Finalizadas",
                   value: reporte.practicas_por_estado.finalizada,
-                  color: "text-green-600",
-                  bg: "bg-green-50",
+                  accent: "rgba(52,211,153,.15)",
+                  border: "rgba(52,211,153,.3)",
+                  color: "#6ee7b7",
                 },
                 {
                   label: "En curso",
                   value: reporte.practicas_por_estado.iniciada,
-                  color: "text-amber-600",
-                  bg: "bg-amber-50",
+                  accent: "rgba(251,191,36,.12)",
+                  border: "rgba(251,191,36,.28)",
+                  color: "#fcd34d",
                 },
                 {
                   label: "Pausadas",
                   value: reporte.practicas_por_estado.pausada,
-                  color: "text-slate-600",
-                  bg: "bg-slate-100",
+                  accent: "rgba(255,255,255,.06)",
+                  border: "rgba(255,255,255,.12)",
+                  color: "rgba(200,215,255,.7)",
                 },
-              ].map(({ label, value, color, bg }) => (
-                <div key={label} className={`${bg} rounded-xl px-4 py-3`}>
-                  <p className="text-xs text-slate-500">{label}</p>
-                  <p className={`text-2xl font-semibold mt-0.5 ${color}`}>{value}</p>
+              ].map(({ label, value, accent, border, color }) => (
+                <div key={label} style={{
+                  background: accent,
+                  border: `1px solid ${border}`,
+                  borderRadius: "12px",
+                  padding: "14px",
+                  textAlign: "center",
+                }}>
+                  <p style={{
+                    color: "rgba(200,215,255,.7)",
+                    fontSize: "10px", margin: "0 0 6px",
+                    textTransform: "uppercase", letterSpacing: ".06em",
+                  }}>
+                    {label}
+                  </p>
+                  <p style={{
+                    color, fontSize: "28px",
+                    fontWeight: 700, margin: 0, letterSpacing: "-1px",
+                  }}>
+                    {value}
+                  </p>
                 </div>
               ))}
             </div>
-          </Card>
+          </div>
 
           {/* Reportes guardados */}
           {reportesGuardados.length > 0 && (
-            <>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3">
+            <div className="vv-s6">
+              <p style={{
+                color: "white",
+                fontSize: "13px", fontWeight: 500, margin: "0 0 12px",
+              }}>
                 Reportes guardados por período
-              </h3>
-              <div className="flex flex-col gap-3">
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {reportesGuardados.map((r) => (
-                  <Card key={r.id}>
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{r.titulo}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{r.periodo}</p>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-slate-500">
-                        <span>{r.total_practicas} prácticas</span>
-                        <span>{r.total_estudiantes} estudiantes</span>
-                        <span>
-                          {r.promedio_precision > 0
-                            ? `${r.promedio_precision.toFixed(1)}% precisión`
-                            : "sin datos"}
-                        </span>
-                      </div>
+                  <div key={r.id} style={{
+                    background: "rgba(255,255,255,.06)",
+                    border: "1px solid rgba(255,255,255,.1)",
+                    borderRadius: "14px",
+                    padding: "14px 16px",
+                    display: "flex", alignItems: "center",
+                    justifyContent: "space-between",
+                    flexWrap: "wrap", gap: "10px",
+                  }}>
+                    <div>
+                      <p style={{
+                        color: "white",
+                        fontSize: "13px", fontWeight: 500, margin: 0,
+                      }}>
+                        {r.titulo}
+                      </p>
+                      <p style={{
+                        color: "rgba(180,200,255,.65)",
+                        fontSize: "11px", margin: "3px 0 0",
+                      }}>
+                        {r.periodo}
+                      </p>
                     </div>
-                  </Card>
+                    <div style={{
+                      display: "flex", alignItems: "center",
+                      gap: "8px", flexWrap: "wrap",
+                    }}>
+                      {[
+                        `${r.total_practicas} prácticas`,
+                        `${r.total_estudiantes} estudiantes`,
+                        r.promedio_precision > 0
+                          ? `${r.promedio_precision.toFixed(1)}% precisión`
+                          : "sin datos",
+                      ].map((txt) => (
+                        <span key={txt} style={{
+                          background: "rgba(255,255,255,.07)",
+                          border: "1px solid rgba(255,255,255,.12)",
+                          borderRadius: "20px",
+                          padding: "3px 10px",
+                          color: "rgba(200,215,255,.75)",
+                          fontSize: "11px",
+                        }}>
+                          {txt}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </>
+            </div>
           )}
         </>
       )}

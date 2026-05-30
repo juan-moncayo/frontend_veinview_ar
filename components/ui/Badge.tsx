@@ -5,18 +5,47 @@ interface BadgeProps {
   children: React.ReactNode;
 }
 
-const colorClass: Record<Color, string> = {
-  green: "bg-green-50 text-green-700 border border-green-200",
-  yellow: "bg-amber-50 text-amber-700 border border-amber-200",
-  red: "bg-red-50 text-red-700 border border-red-200",
-  gray: "bg-slate-100 text-slate-600 border border-slate-200",
-  blue: "bg-blue-50 text-blue-700 border border-blue-200",
+const styles: Record<Color, React.CSSProperties> = {
+  green: {
+    background: "rgba(52,211,153,.12)",
+    border: "1px solid rgba(52,211,153,.25)",
+    color: "#6ee7b7",
+  },
+  yellow: {
+    background: "rgba(251,191,36,.1)",
+    border: "1px solid rgba(251,191,36,.2)",
+    color: "#fcd34d",
+  },
+  red: {
+    background: "rgba(239,68,68,.1)",
+    border: "1px solid rgba(239,68,68,.2)",
+    color: "#fca5a5",
+  },
+  gray: {
+    background: "rgba(148,163,184,.08)",
+    border: "1px solid rgba(148,163,184,.15)",
+    color: "rgba(148,163,184,.6)",
+  },
+  blue: {
+    background: "rgba(59,130,246,.12)",
+    border: "1px solid rgba(59,130,246,.2)",
+    color: "#93c5fd",
+  },
 };
 
 export default function Badge({ color = "gray", children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${colorClass[color]}`}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "3px 9px",
+        borderRadius: "20px",
+        fontSize: "11px",
+        fontWeight: 500,
+        whiteSpace: "nowrap",
+        ...styles[color],
+      }}
     >
       {children}
     </span>

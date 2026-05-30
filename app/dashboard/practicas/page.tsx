@@ -1,14 +1,11 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { Practica, PaginatedResponse } from "@/types";
-import TopBar from "@/components/layout/TopBar";
-import Button from "@/components/ui/Button";
-import Card from "@/components/ui/Card";
-import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import Button from "@/components/ui/Button";
 import Link from "next/link";
 
 interface Dispositivo {
@@ -29,11 +26,47 @@ function formatDuracion(s: number) {
   return `${Math.floor(m / 60)}h ${m % 60}m`;
 }
 
-const estadoColor: Record<string, "green" | "yellow" | "gray"> = {
-  iniciada: "green",
-  pausada: "yellow",
-  finalizada: "gray",
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,.07)",
+  border: "1px solid rgba(255,255,255,.12)",
+  borderRadius: "11px",
+  padding: "11px 14px",
+  color: "white",
+  fontSize: "14px",
+  outline: "none",
+  WebkitAppearance: "none",
+  appearance: "none",
+  cursor: "pointer",
+  boxSizing: "border-box",
 };
+
+const labelStyle: React.CSSProperties = {
+  color: "rgba(200,215,255,.75)",
+  fontSize: "11px",
+  fontWeight: 500,
+  letterSpacing: ".08em",
+  textTransform: "uppercase",
+  display: "block",
+  marginBottom: "6px",
+};
+
+function Avatar({ nombre }: { nombre: string }) {
+  return (
+    <div style={{
+      width: "34px", height: "34px",
+      borderRadius: "50%",
+      background: "rgba(59,130,246,.2)",
+      border: "1px solid rgba(59,130,246,.35)",
+      display: "flex", alignItems: "center",
+      justifyContent: "center",
+      fontSize: "13px", fontWeight: 700,
+      color: "#93c5fd", flexShrink: 0,
+    }}>
+      {nombre?.charAt(0)?.toUpperCase() ?? "?"}
+    </div>
+  );
+}
 
 export default function PracticasPage() {
   const router = useRouter();
@@ -55,9 +88,7 @@ export default function PracticasPage() {
       .finally(() => setLoading(false));
   }, [page]);
 
-  useEffect(() => {
-    fetchPracticas();
-  }, [fetchPracticas]);
+  useEffect(() => { fetchPracticas(); }, [fetchPracticas]);
 
   useEffect(() => {
     if (modal) {
@@ -83,14 +114,14 @@ export default function PracticasPage() {
       });
       setModal(false);
       setForm({ estudiante_id: "", dispositivo_id: "" });
-      // Redirigir directo a la práctica recién creada
       router.push(`/dashboard/practicas/${nueva.id}`);
     } catch (err: unknown) {
       const e = err as { response?: { data?: Record<string, string[]> } };
-      const msg = e?.response?.data
-        ? Object.values(e.response.data).flat().join(" ")
-        : "Error al crear la práctica";
-      setCreateError(msg);
+      setCreateError(
+        e?.response?.data
+          ? Object.values(e.response.data).flat().join(" ")
+          : "Error al crear la práctica"
+      );
     } finally {
       setCreating(false);
     }
@@ -100,120 +131,292 @@ export default function PracticasPage() {
 
   return (
     <>
-      <TopBar
-        title="Prácticas"
-        subtitle={data ? `${data.count} registradas` : ""}
-        actions={
-          <Button icon={<Plus size={15} />} onClick={() => setModal(true)}>
-            Nueva práctica
-          </Button>
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateY(14px); }
+          to   { opacity:1; transform:translateY(0); }
         }
-      />
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .vv-h1 { animation: fadeUp .4s ease both; }
+        .vv-h2 { animation: fadeUp .4s .1s ease both; }
 
-      <Card padding={false}>
+        .vv-practica-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255,255,255,.07);
+          text-decoration: none;
+          transition: background .15s;
+        }
+        .vv-practica-row:hover { background: rgba(255,255,255,.05); }
+        .vv-practica-row:last-child { border-bottom: none; }
+
+        .vv-page-btn {
+          padding: 7px 14px;
+          border-radius: 8px;
+          border: 1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.06);
+          color: rgba(200,215,255,.75);
+          font-size: 12px;
+          cursor: pointer;
+          transition: background .15s;
+        }
+        .vv-page-btn:hover:not(:disabled) { background: rgba(255,255,255,.1); }
+        .vv-page-btn:disabled { opacity:.3; cursor:not-allowed; }
+
+        .vv-btn-new {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          padding: 10px 16px;
+          border-radius: 11px;
+          border: none;
+          background: linear-gradient(135deg, #3b82f6, #4f46e5);
+          color: white;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: opacity .2s, transform .15s;
+          box-shadow: 0 4px 16px rgba(59,130,246,.35);
+          white-space: nowrap;
+        }
+        .vv-btn-new:hover  { opacity: .9; }
+        .vv-btn-new:active { transform: scale(.97); }
+
+        @media (max-width: 560px) {
+          .vv-col-fecha    { display: none; }
+          .vv-col-duracion { display: none; }
+        }
+      `}</style>
+
+      {/* Header */}
+      <div className="vv-h1" style={{
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: "24px", gap: "12px", flexWrap: "wrap",
+      }}>
+        <div>
+          <p style={{
+            color: "rgba(180,200,255,.65)",
+            fontSize: "11px", margin: "0 0 2px",
+            letterSpacing: ".05em", textTransform: "uppercase",
+          }}>
+            Gestión
+          </p>
+          <h1 style={{
+            color: "white", fontSize: "20px",
+            fontWeight: 700, margin: 0, letterSpacing: "-.4px",
+          }}>
+            Prácticas
+          </h1>
+          {data && (
+            <p style={{
+              color: "rgba(180,200,255,.6)",
+              fontSize: "12px", margin: "3px 0 0",
+            }}>
+              {data.count} registradas
+            </p>
+          )}
+        </div>
+        <button className="vv-btn-new" onClick={() => setModal(true)}>
+          <Plus size={14}/>
+          Nueva práctica
+        </button>
+      </div>
+
+      {/* Lista */}
+      <div className="vv-h2" style={{
+        background: "rgba(255,255,255,.06)",
+        border: "1px solid rgba(255,255,255,.1)",
+        borderRadius: "16px",
+        overflow: "hidden",
+      }}>
+        {/* Header columnas */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "40px 1fr 120px 90px 90px",
+          padding: "10px 16px",
+          borderBottom: "1px solid rgba(255,255,255,.08)",
+          gap: "8px",
+        }}>
+          {[
+            { label: "#", cls: "" },
+            { label: "Estudiante", cls: "" },
+            { label: "Inicio", cls: "vv-col-fecha" },
+            { label: "Duración", cls: "vv-col-duracion" },
+            { label: "Estado", cls: "" },
+          ].map(({ label, cls }) => (
+            <span
+              key={label}
+              className={cls}
+              style={{
+                color: "rgba(200,215,255,.6)",
+                fontSize: "10px",
+                textTransform: "uppercase",
+                letterSpacing: ".07em",
+                fontWeight: 500,
+              }}
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin w-6 h-6 border-2 border-slate-300
-              border-t-slate-700 rounded-full" />
+          <div style={{
+            display: "flex", alignItems: "center",
+            justifyContent: "center", padding: "48px",
+          }}>
+            <div style={{
+              width: "24px", height: "24px",
+              border: "2px solid rgba(255,255,255,.1)",
+              borderTopColor: "#3b82f6", borderRadius: "50%",
+              animation: "spin .8s linear infinite",
+            }}/>
           </div>
         ) : data?.results.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-sm text-slate-400">No hay prácticas registradas.</p>
+          <div style={{ padding: "48px", textAlign: "center" }}>
+            <p style={{
+              color: "rgba(180,200,255,.5)",
+              fontSize: "13px", margin: "0 0 12px",
+            }}>
+              No hay prácticas registradas.
+            </p>
             <button
               onClick={() => setModal(true)}
-              className="mt-2 text-sm text-slate-600 underline underline-offset-2
-                hover:text-slate-800 transition-colors"
+              style={{
+                background: "rgba(59,130,246,.15)",
+                border: "1px solid rgba(59,130,246,.3)",
+                borderRadius: "10px",
+                padding: "8px 16px",
+                color: "#93c5fd", fontSize: "13px",
+                cursor: "pointer",
+              }}
             >
               Crear la primera
             </button>
           </div>
         ) : (
-          <>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  {["ID", "Estudiante", "Inicio", "Duración", "Estado"].map((h) => (
-                    <th
-                      key={h}
-                      className="text-left text-xs font-medium text-slate-500 px-5 py-3"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {data?.results.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-5 py-3 font-mono text-xs text-slate-400">
-                      #{p.id}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Link
-                        href={`/dashboard/practicas/${p.id}`}
-                        className="font-medium text-slate-800 hover:text-blue-600
-                          transition-colors"
-                      >
-                        {p.estudiante.nombre_completo}
-                      </Link>
-                      <p className="text-xs text-slate-400">
-                        {p.estudiante.codigo_estudiante}
-                      </p>
-                    </td>
-                    <td className="px-5 py-3 text-xs text-slate-500">
-                      {new Date(p.fecha_inicio).toLocaleString("es-CO", {
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="px-5 py-3 text-slate-600">
-                      {formatDuracion(p.tiempo_transcurrido)}
-                    </td>
-                    <td className="px-5 py-3">
-                      <Badge color={estadoColor[p.estado] ?? "gray"}>
-                        {p.estado}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          data?.results.map((p) => {
+            const estado = p.estado;
+            const estadoStyle =
+              estado === "iniciada"
+                ? { bg: "rgba(52,211,153,.15)", border: "rgba(52,211,153,.3)", text: "#6ee7b7" }
+                : estado === "pausada"
+                ? { bg: "rgba(251,191,36,.12)", border: "rgba(251,191,36,.28)", text: "#fcd34d" }
+                : { bg: "rgba(255,255,255,.07)", border: "rgba(255,255,255,.13)", text: "rgba(200,215,255,.6)" };
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-5 py-3
-                border-t border-slate-100">
-                <span className="text-xs text-slate-500">
-                  Página {page} de {totalPages}
+            return (
+              <Link
+                key={p.id}
+                href={`/dashboard/practicas/${p.id}`}
+                className="vv-practica-row"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "40px 1fr 120px 90px 90px",
+                  gap: "8px", alignItems: "center",
+                }}
+              >
+                <span style={{
+                  color: "rgba(180,200,255,.55)",
+                  fontSize: "11px", fontFamily: "monospace",
+                }}>
+                  #{p.id}
                 </span>
-                <div className="flex gap-1">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                    className="px-3 py-1.5 text-xs rounded-lg border border-slate-200
-                      text-slate-600 hover:bg-slate-50 disabled:opacity-40
-                      disabled:cursor-not-allowed transition-colors"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                    className="px-3 py-1.5 text-xs rounded-lg border border-slate-200
-                      text-slate-600 hover:bg-slate-50 disabled:opacity-40
-                      disabled:cursor-not-allowed transition-colors"
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </Card>
 
-      {/* Modal nueva práctica */}
+                <div style={{
+                  display: "flex", alignItems: "center",
+                  gap: "10px", minWidth: 0,
+                }}>
+                  <Avatar nombre={p.estudiante.nombre_completo}/>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{
+                      color: "white",
+                      fontSize: "13px", fontWeight: 500,
+                      margin: 0, whiteSpace: "nowrap",
+                      overflow: "hidden", textOverflow: "ellipsis",
+                    }}>
+                      {p.estudiante.nombre_completo}
+                    </p>
+                    <p style={{
+                      color: "rgba(180,200,255,.6)",
+                      fontSize: "10px", margin: "2px 0 0",
+                      fontFamily: "monospace",
+                    }}>
+                      {p.estudiante.codigo_estudiante}
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className="vv-col-fecha"
+                  style={{ color: "rgba(180,200,255,.65)", fontSize: "11px" }}
+                >
+                  {new Date(p.fecha_inicio).toLocaleString("es-CO", {
+                    day: "2-digit", month: "short",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </span>
+
+                <span
+                  className="vv-col-duracion"
+                  style={{ color: "rgba(180,200,255,.65)", fontSize: "12px" }}
+                >
+                  {formatDuracion(p.tiempo_transcurrido)}
+                </span>
+
+                <div style={{
+                  display: "flex", alignItems: "center",
+                  justifyContent: "space-between",
+                }}>
+                  <span style={{
+                    background: estadoStyle.bg,
+                    border: `1px solid ${estadoStyle.border}`,
+                    color: estadoStyle.text,
+                    fontSize: "10px", padding: "3px 8px",
+                    borderRadius: "20px", fontWeight: 500,
+                  }}>
+                    {estado}
+                  </span>
+                  <ChevronRight size={13} color="rgba(180,200,255,.45)"/>
+                </div>
+              </Link>
+            );
+          })
+        )}
+
+        {totalPages > 1 && (
+          <div style={{
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between",
+            padding: "12px 16px",
+            borderTop: "1px solid rgba(255,255,255,.08)",
+          }}>
+            <span style={{ color: "rgba(180,200,255,.6)", fontSize: "11px" }}>
+              Página {page} de {totalPages}
+            </span>
+            <div style={{ display: "flex", gap: "6px" }}>
+              <button
+                className="vv-page-btn"
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                ← Anterior
+              </button>
+              <button
+                className="vv-page-btn"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Siguiente →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
       <Modal
         open={modal}
         onClose={() => {
@@ -223,45 +426,37 @@ export default function PracticasPage() {
         }}
         title="Nueva práctica"
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">
-              Estudiante
-            </label>
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <label style={labelStyle}>Estudiante</label>
             <select
               value={form.estudiante_id}
-              onChange={(e) =>
-                setForm({ ...form, estudiante_id: e.target.value })
-              }
-              className="w-full rounded-lg border border-slate-200 bg-white text-sm
-                text-slate-900 px-3 py-2.5 focus:outline-none focus:ring-2
-                focus:ring-slate-300"
+              onChange={(e) => setForm({ ...form, estudiante_id: e.target.value })}
+              style={selectStyle}
             >
-              <option value="">Seleccionar estudiante...</option>
+              <option value="" style={{ background: "#0a1020" }}>
+                Seleccionar estudiante...
+              </option>
               {estudiantes.map((e) => (
-                <option key={e.id} value={e.id}>
+                <option key={e.id} value={e.id} style={{ background: "#0a1020" }}>
                   {e.nombre_completo} — {e.codigo_estudiante}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">
-              Dispositivo ESP32
-            </label>
+          <div>
+            <label style={labelStyle}>Dispositivo ESP32</label>
             <select
               value={form.dispositivo_id}
-              onChange={(e) =>
-                setForm({ ...form, dispositivo_id: e.target.value })
-              }
-              className="w-full rounded-lg border border-slate-200 bg-white text-sm
-                text-slate-900 px-3 py-2.5 focus:outline-none focus:ring-2
-                focus:ring-slate-300"
+              onChange={(e) => setForm({ ...form, dispositivo_id: e.target.value })}
+              style={selectStyle}
             >
-              <option value="">Seleccionar dispositivo...</option>
+              <option value="" style={{ background: "#0a1020" }}>
+                Seleccionar dispositivo...
+              </option>
               {dispositivos.map((d) => (
-                <option key={d.id} value={d.id}>
+                <option key={d.id} value={d.id} style={{ background: "#0a1020" }}>
                   {d.nombre} — {d.mac_address}
                 </option>
               ))}
@@ -269,18 +464,34 @@ export default function PracticasPage() {
           </div>
 
           {createError && (
-            <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2
-              border border-red-100">
-              {createError}
-            </p>
+            <div style={{
+              background: "rgba(239,68,68,.12)",
+              border: "1px solid rgba(239,68,68,.25)",
+              borderRadius: "10px",
+              padding: "10px 14px",
+              display: "flex", alignItems: "center", gap: "8px",
+            }}>
+              <div style={{
+                width: "6px", height: "6px",
+                borderRadius: "50%", background: "#f87171", flexShrink: 0,
+              }}/>
+              <p style={{ color: "#fca5a5", fontSize: "12px", margin: 0 }}>
+                {createError}
+              </p>
+            </div>
           )}
 
-          <p className="text-xs text-slate-400">
-            Al crear la práctica serás redirigido automáticamente al panel
-            de seguimiento en tiempo real.
+          <p style={{
+            color: "rgba(180,200,255,.55)",
+            fontSize: "11px", margin: 0,
+          }}>
+            Al crear la práctica serás redirigido al panel de seguimiento en tiempo real.
           </p>
 
-          <div className="flex gap-2 justify-end pt-1">
+          <div style={{
+            display: "flex", gap: "8px",
+            justifyContent: "flex-end", paddingTop: "4px",
+          }}>
             <Button
               variant="secondary"
               onClick={() => {

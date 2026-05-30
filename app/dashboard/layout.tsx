@@ -17,11 +17,40 @@ export default function DashboardLayout({
   }, [router]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto pl-60">
-        <div className="max-w-6xl mx-auto px-6 py-6">{children}</div>
-      </main>
-    </div>
+    <>
+      <style>{`
+        @media (max-width: 768px) {
+          .vv-main    { padding-left: 0 !important; padding-top: 56px !important; }
+          .vv-content { padding: 16px !important; }
+        }
+      `}</style>
+      <div style={{
+        display: "flex",
+        height: "100vh",
+        overflow: "hidden",
+        background: "#060c1a",
+      }}>
+        <Sidebar />
+        <main
+          className="vv-main"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            paddingLeft: "220px",
+          }}
+        >
+          <div
+            className="vv-content"
+            style={{
+              maxWidth: "1200px",
+              margin: "0 auto",
+              padding: "28px",
+            }}
+          >
+            {children}
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

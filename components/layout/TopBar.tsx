@@ -6,12 +6,39 @@ interface TopBarProps {
 
 export default function TopBar({ title, subtitle, actions }: TopBarProps) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div style={{
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      marginBottom: "24px",
+      gap: "12px",
+      flexWrap: "wrap",
+    }}>
       <div>
-        <h1 className="text-xl font-semibold text-slate-800">{title}</h1>
-        {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
+        <h1 style={{
+          color: "white",
+          fontSize: "20px",
+          fontWeight: 700,
+          margin: 0,
+          letterSpacing: "-.4px",
+        }}>
+          {title}
+        </h1>
+        {subtitle && (
+          <p style={{
+            color: "rgba(148,163,184,.5)",
+            fontSize: "12px",
+            margin: "3px 0 0",
+          }}>
+            {subtitle}
+          </p>
+        )}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

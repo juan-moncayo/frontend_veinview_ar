@@ -20,6 +20,30 @@ interface FormData {
   telefono: string;
 }
 
+const selectStyle: React.CSSProperties = {
+  width: "100%",
+  background: "rgba(255,255,255,.06)",
+  border: "1px solid rgba(255,255,255,.1)",
+  borderRadius: "11px",
+  padding: "11px 14px",
+  color: "white",
+  fontSize: "14px",
+  outline: "none",
+  WebkitAppearance: "none",
+  appearance: "none",
+  cursor: "pointer",
+};
+
+const labelStyle: React.CSSProperties = {
+  color: "rgba(148,163,184,.65)",
+  fontSize: "11px",
+  fontWeight: 500,
+  letterSpacing: ".08em",
+  textTransform: "uppercase",
+  display: "block",
+  marginBottom: "6px",
+};
+
 export default function CrearEstudianteModal({ open, onClose, onCreated }: Props) {
   const [form, setForm] = useState<FormData>({
     codigo_estudiante: "",
@@ -41,8 +65,8 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
   function validate() {
     const errs: Partial<FormData> = {};
     if (!form.codigo_estudiante) errs.codigo_estudiante = "Campo requerido";
-    if (!form.nombre_completo) errs.nombre_completo = "Campo requerido";
-    if (!form.correo) errs.correo = "Campo requerido";
+    if (!form.nombre_completo)   errs.nombre_completo   = "Campo requerido";
+    if (!form.correo)            errs.correo            = "Campo requerido";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo))
       errs.correo = "Correo inválido";
     setErrors(errs);
@@ -72,12 +96,9 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
     } catch (err: unknown) {
       const data = (err as { response?: { data?: Record<string, string[]> } })
         ?.response?.data;
-      if (data) {
-        const msgs = Object.values(data).flat().join(" ");
-        setServerError(msgs);
-      } else {
-        setServerError("Error al crear el estudiante");
-      }
+      setServerError(
+        data ? Object.values(data).flat().join(" ") : "Error al crear el estudiante"
+      );
     } finally {
       setLoading(false);
     }
@@ -85,8 +106,12 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
 
   return (
     <Modal open={open} onClose={onClose} title="Nuevo estudiante">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-3">
+      <form
+        onSubmit={handleSubmit}
+        style={{ display: "flex", flexDirection: "column", gap: "16px" }}
+      >
+        {/* Código + Semestre */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
           <Input
             label="Código"
             placeholder="E12345"
@@ -94,17 +119,15 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
             onChange={(e) => set("codigo_estudiante", e.target.value)}
             error={errors.codigo_estudiante}
           />
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-slate-700">Semestre</label>
+          <div>
+            <label style={labelStyle}>Semestre</label>
             <select
               value={form.semestre}
               onChange={(e) => set("semestre", e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white text-sm
-                text-slate-900 px-3 py-2.5 focus:outline-none focus:ring-2
-                focus:ring-slate-300 focus:border-slate-400"
+              style={selectStyle}
             >
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((s) => (
-                <option key={s} value={s}>
+              {[1,2,3,4,5,6,7,8,9,10].map((s) => (
+                <option key={s} value={s} style={{ background: "#0a1020" }}>
                   Semestre {s}
                 </option>
               ))}
@@ -119,6 +142,7 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
           onChange={(e) => set("nombre_completo", e.target.value)}
           error={errors.nombre_completo}
         />
+
         <Input
           label="Correo electrónico"
           type="email"
@@ -128,22 +152,18 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
           error={errors.correo}
         />
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-slate-700">Programa</label>
+        <div>
+          <label style={labelStyle}>Programa</label>
           <select
             value={form.programa}
             onChange={(e) => set("programa", e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white text-sm
-              text-slate-900 px-3 py-2.5 focus:outline-none focus:ring-2
-              focus:ring-slate-300 focus:border-slate-400"
+            style={selectStyle}
           >
-            {["Enfermería", "Medicina", "Instrumentación quirúrgica", "Bacteriología"].map(
-              (p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              )
-            )}
+            {["Enfermería","Medicina","Instrumentación quirúrgica","Bacteriología"].map((p) => (
+              <option key={p} value={p} style={{ background: "#0a1020" }}>
+                {p}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -155,16 +175,34 @@ export default function CrearEstudianteModal({ open, onClose, onCreated }: Props
         />
 
         {serverError && (
-          <p className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2 border border-red-100">
-            {serverError}
-          </p>
+          <div style={{
+            background: "rgba(239,68,68,.1)",
+            border: "1px solid rgba(239,68,68,.2)",
+            borderRadius: "10px",
+            padding: "10px 14px",
+            display: "flex", alignItems: "center", gap: "8px",
+          }}>
+            <div style={{
+              width: "6px", height: "6px",
+              borderRadius: "50%", background: "#f87171", flexShrink: 0,
+            }}/>
+            <p style={{ color: "#fca5a5", fontSize: "12px", margin: 0 }}>
+              {serverError}
+            </p>
+          </div>
         )}
 
-        <p className="text-xs text-slate-400">
-          La contraseña inicial del estudiante será su código (ej. E12345)
+        <p style={{
+          color: "rgba(148,163,184,.35)",
+          fontSize: "11px", margin: 0,
+        }}>
+          La contraseña inicial será el código del estudiante
         </p>
 
-        <div className="flex gap-2 justify-end pt-1">
+        <div style={{
+          display: "flex", gap: "8px",
+          justifyContent: "flex-end", paddingTop: "4px",
+        }}>
           <Button variant="secondary" type="button" onClick={onClose}>
             Cancelar
           </Button>

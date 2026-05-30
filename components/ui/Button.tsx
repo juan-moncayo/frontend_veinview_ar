@@ -11,20 +11,34 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const variantClass: Record<Variant, string> = {
-  primary:
-    "bg-slate-800 text-white hover:bg-slate-700 active:bg-slate-900 shadow-sm",
-  secondary:
-    "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:bg-slate-100 shadow-sm",
-  ghost: "text-slate-600 hover:bg-slate-100 active:bg-slate-200",
-  danger:
-    "bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 active:bg-red-200",
+const variantStyles: Record<Variant, React.CSSProperties> = {
+  primary: {
+    background: "linear-gradient(135deg, #3b82f6, #4f46e5)",
+    color: "white",
+    border: "none",
+    boxShadow: "0 4px 16px rgba(59,130,246,.35), inset 0 1px 0 rgba(255,255,255,.15)",
+  },
+  secondary: {
+    background: "rgba(255,255,255,.06)",
+    color: "rgba(148,163,184,.8)",
+    border: "1px solid rgba(255,255,255,.1)",
+  },
+  ghost: {
+    background: "transparent",
+    color: "rgba(148,163,184,.7)",
+    border: "none",
+  },
+  danger: {
+    background: "rgba(239,68,68,.1)",
+    color: "#fca5a5",
+    border: "1px solid rgba(239,68,68,.2)",
+  },
 };
 
-const sizeClass: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-sm gap-1.5",
-  md: "px-4 py-2 text-sm gap-2",
-  lg: "px-5 py-2.5 text-base gap-2",
+const sizeStyles: Record<Size, React.CSSProperties> = {
+  sm: { padding: "7px 12px", fontSize: "12px", gap: "6px" },
+  md: { padding: "10px 16px", fontSize: "13px", gap: "7px" },
+  lg: { padding: "12px 20px", fontSize: "14px", gap: "8px" },
 };
 
 export default function Button({
@@ -35,40 +49,47 @@ export default function Button({
   children,
   className = "",
   disabled,
+  style,
   ...props
 }: ButtonProps) {
   return (
     <button
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center rounded-lg font-medium transition-colors
-        duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none
-        focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-1
-        ${variantClass[variant]} ${sizeClass[size]} ${className}`}
+      className={className}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "11px",
+        fontWeight: 500,
+        cursor: disabled || loading ? "not-allowed" : "pointer",
+        opacity: disabled || loading ? .5 : 1,
+        transition: "opacity .2s, transform .15s",
+        position: "relative",
+        overflow: "hidden",
+        WebkitAppearance: "none",
+        ...variantStyles[variant],
+        ...sizeStyles[size],
+        ...style,
+      }}
       {...props}
     >
       {loading ? (
-        <svg
-          className="animate-spin h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8v8H4z"
-          />
-        </svg>
-      ) : (
-        icon
-      )}
+        <>
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+          <svg
+            style={{ animation: "spin .8s linear infinite", flexShrink: 0 }}
+            width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+          >
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+        </>
+      ) : icon ? (
+        <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+          {icon}
+        </span>
+      ) : null}
       {children}
     </button>
   );
