@@ -242,9 +242,18 @@ export default function DashboardPage() {
                 justifyContent: "center",
                 overflow: "hidden", flexShrink: 0,
               }}>
-                <Image src="/logo.png" alt="VeinView AR"
-                  width={30} height={30}
-                  style={{ objectFit: "contain" }}
+                {/* ── Logo con scale para compensar márgenes transparentes del PNG ── */}
+                <Image
+                  src="/logo.png"
+                  alt="VeinView AR"
+                  width={42}
+                  height={42}
+                  style={{
+                    objectFit: "contain",
+                    width: "42px",
+                    height: "42px",
+                    transform: "scale(1.45)",
+                  }}
                 />
               </div>
               <div>

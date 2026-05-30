@@ -49,13 +49,19 @@ export default function Sidebar() {
           flexShrink: 0,
           overflow: "hidden",
           boxShadow: "0 4px 16px rgba(0,0,0,.3)",
+          position: "relative",
         }}>
           <Image
             src="/logo.png"
             alt="VeinView AR"
-            width={36}
-            height={36}
-            style={{ objectFit: "contain" }}
+            width={44}
+            height={44}
+            style={{
+              objectFit: "contain",
+              width: "44px",
+              height: "44px",
+              transform: "scale(1.45)",
+            }}
             priority
           />
         </div>
@@ -70,7 +76,7 @@ export default function Sidebar() {
             VeinView AR
           </p>
           <p style={{
-            color: "rgba(148,163,184,.45)",
+            color: "rgba(180,200,255,.45)",
             fontSize: "10px",
             margin: 0,
           }}>
@@ -88,7 +94,7 @@ export default function Sidebar() {
             background: "none",
             border: "none",
             cursor: "pointer",
-            color: "rgba(148,163,184,.6)",
+            color: "rgba(180,200,255,.6)",
             padding: "4px",
           }}
           aria-label="Cerrar menú"
@@ -112,14 +118,14 @@ export default function Sidebar() {
               <Icon
                 size={15}
                 style={{
-                  color: active ? "#93c5fd" : "rgba(148,163,184,.5)",
+                  color: active ? "#93c5fd" : "rgba(180,200,255,.45)",
                   flexShrink: 0,
                 }}
               />
               <span style={{
                 fontSize: "13px",
                 fontWeight: active ? 500 : 400,
-                color: active ? "#93c5fd" : "rgba(148,163,184,.55)",
+                color: active ? "#93c5fd" : "rgba(180,200,255,.5)",
               }}>
                 {label}
               </span>
@@ -148,11 +154,11 @@ export default function Sidebar() {
           <LogOut
             size={14}
             className="vv-logout-icon"
-            style={{ color: "rgba(148,163,184,.4)", flexShrink: 0 }}
+            style={{ color: "rgba(180,200,255,.35)", flexShrink: 0 }}
           />
           <span
             className="vv-logout-text"
-            style={{ fontSize: "12px", color: "rgba(148,163,184,.4)" }}
+            style={{ fontSize: "12px", color: "rgba(180,200,255,.35)" }}
           >
             Cerrar sesión
           </span>
@@ -246,9 +252,7 @@ export default function Sidebar() {
           transform: translateX(-100%);
           transition: transform .28s cubic-bezier(.22,1,.36,1);
         }
-        .vv-drawer.open {
-          transform: translateX(0);
-        }
+        .vv-drawer.open { transform: translateX(0); }
 
         /* Overlay */
         .vv-overlay {
@@ -267,11 +271,6 @@ export default function Sidebar() {
           .vv-drawer { display: flex; }
           .vv-close-btn { display: flex !important; }
         }
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
       `}</style>
 
       {/* ── Desktop sidebar ── */}
@@ -283,19 +282,28 @@ export default function Sidebar() {
       <div className="vv-topbar">
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{
-            width: "32px", height: "32px",
+            width: "32px",
+            height: "32px",
             borderRadius: "9px",
             background: "rgba(255,255,255,.08)",
             border: "1px solid rgba(255,255,255,.12)",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             overflow: "hidden",
+            position: "relative",
           }}>
             <Image
               src="/logo.png"
               alt="VeinView AR"
-              width={24}
-              height={24}
-              style={{ objectFit: "contain" }}
+              width={32}
+              height={32}
+              style={{
+                objectFit: "contain",
+                width: "32px",
+                height: "32px",
+                transform: "scale(1.45)",
+              }}
             />
           </div>
           <span style={{
@@ -315,7 +323,7 @@ export default function Sidebar() {
             border: "1px solid rgba(255,255,255,.1)",
             borderRadius: "8px",
             cursor: "pointer",
-            color: "rgba(148,163,184,.8)",
+            color: "rgba(180,200,255,.8)",
             padding: "7px",
             display: "flex",
             alignItems: "center",

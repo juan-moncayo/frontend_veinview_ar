@@ -281,9 +281,14 @@ export default function LoginPage() {
                 <Image
                   src="/logo.png"
                   alt="VeinView AR"
-                  width={88}
-                  height={88}
-                  style={{ objectFit: "contain" }}
+                  width={120}
+                  height={120}
+                  style={{
+                    objectFit: "contain",
+                    width: "116px",
+                    height: "116px",
+                    transform: "scale(1.45)",
+                  }}
                   priority
                 />
                 {/* Indicador activo */}
